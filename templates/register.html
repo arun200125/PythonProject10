@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register | Employee Wellness</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="auth-body">
+  <div class="auth-wrapper">
+    <div class="auth-card fade-in">
+      <h2>Create Account 🧾</h2>
+      <p class="subtitle">Join the wellness program</p>
+      <form method="POST">
+        <div class="two-col">
+          <div class="input-group"><input type="text" name="emp_id" required><label>Employee ID</label></div>
+          <div class="input-group"><input type="text" name="name" required><label>Full Name</label></div>
+        </div>
+        <div class="two-col">
+          <div class="input-group"><input type="email" name="email" required><label>Email ID</label></div>
+          <div class="input-group"><input type="text" name="contact"><label>Contact Number</label></div>
+        </div>
+        <div class="three-col">
+          <div class="input-group"><input type="number" name="age"><label>Age</label></div>
+          <div class="input-group"><input type="number" name="height"><label>Height (cm)</label></div>
+          <div class="input-group"><input type="number" name="weight"><label>Weight (kg)</label></div>
+        </div>
+        <div class="two-col">
+          <div class="input-group"><input type="password" name="password" required><label>Password</label></div>
+          <div class="input-group"><input type="password" name="confirm" required><label>Confirm Password</label></div>
+        </div>
+        <button type="submit" class="primary-btn">Register</button>
+        {% if message %}<p class="error">{{ message }}</p>{% endif %}
+        <div class="links">
+          <a href="{{ url_for('login') }}">Already registered? Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

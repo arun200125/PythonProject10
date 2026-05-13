@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Forgot Password | Employee Wellness</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="auth-body">
+  <div class="auth-wrapper">
+    <div class="auth-card fade-in">
+      <h2>Forgot Password 🔐</h2>
+      <p class="subtitle">Enter your registered email to reset password</p>
+      <form method="POST">
+        <div class="input-group">
+          <input type="email" name="email" required>
+          <label>Email Address</label>
+        </div>
+        <button type="submit" class="primary-btn">Send Reset Link</button>
+        {% if message %}<p class="error">{{ message }}</p>{% endif %}
+        <div class="links">
+          <a href="{{ url_for('login') }}">Back to Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

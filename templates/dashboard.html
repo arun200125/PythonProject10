@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employee Wellness Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <h1>🧘 Employee Wellness Dashboard</h1>
+    <div class="user-info">
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="dashboard-main fade-in">
+    <!-- Camera Feed -->
+    <section class="camera-section">
+      <h2>Live Camera Feed</h2>
+      <div class="camera-feed-container">
+        <img id="camera-feed" src="{{ url_for('video_feed') }}" alt="Camera Feed">
+      </div>
+
+      <div class="camera-controls">
+        <button id="start-btn">Start Camera</button>
+        <button id="stop-btn">Stop Camera</button>
+        <button id="report-btn">Generate Report</button>
+      </div>
+
+      <p id="session-time">Session Time: 0s</p>
+    </section>
+
+    <!-- Emotion Chart -->
+    <section class="chart-section">
+      <h2>Live Emotion Levels</h2>
+      <canvas id="emotionChart"></canvas>
+    </section>
+  </main>
+
+  <!-- Report Modal -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeReport()">&times;</span>
+      <h2>Employee Wellness Report</h2>
+      <div id="reportContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Chart.js
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+    const emotions = ['Happy', 'Sad', 'Angry', 'Surprise', 'Disgust', 'Neutral', 'Stress'];
+    const emotionChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: emotions,
+        datasets: [{
+          label: 'Emotion Intensity (%)',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          backgroundColor: [
+            '#42a5f5', '#ef5350', '#ab47bc', '#ffca28', '#66bb6a', '#9e9e9e', '#5c6bc0'
+          ],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true, max: 100 } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    let timerInterval;
+    let startTime;
+    let running = false;
+
+    // Auto start on page load
+    window.addEventListener('load', async () => {
+      await fetch('/start');
+      running = true;
+      startTime = Date.now();
+      timerInterval = setInterval(updateSession, 2000);
+    });
+
+    // Start camera manually
+    document.getElementById('start-btn').onclick = async () => {
+      await fetch('/start');
+      if (!running) {
+        running = true;
+        startTime = Date.now();
+        timerInterval = setInterval(updateSession, 2000);
+      }
+    };
+
+    // Stop camera
+    document.getElementById('stop-btn').onclick = async () => {
+      await fetch('/stop');
+      running = false;
+      clearInterval(timerInterval);
+      generateReport();
+    };
+
+    // Update chart + timer
+    async function updateSession() {
+      if (!running) return;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      document.getElementById('session-time').textContent = `Session Time: ${elapsed}s`;
+
+      const response = await fetch('/analyze');
+      const data = await response.json();
+
+      emotions.forEach((emo, i) => {
+        emotionChart.data.datasets[0].data[i] = data[emo.toLowerCase()] || 0;
+      });
+      emotionChart.update();
+    }
+
+    // Generate wellness report
+    async function generateReport() {
+      const res = await fetch('/report');
+      const report = await res.json();
+
+      if (!report.employee) {
+        alert("No data recorded yet!");
+        return;
+      }
+
+      const reportDiv = document.getElementById("reportContent");
+      reportDiv.innerHTML = `
+        <h3>👤 Employee Information</h3>
+        <p><b>ID:</b> ${report.employee.ID}</p>
+        <p><b>Name:</b> ${report.employee.Name}</p>
+        <p><b>Email:</b> ${report.employee.Email}</p>
+        <p><b>Contact:</b> ${report.employee.Contact}</p>
+        <p><b>Age:</b> ${report.employee.Age}</p>
+        <p><b>Height:</b> ${report.employee.Height} cm</p>
+        <p><b>Weight:</b> ${report.employee.Weight} kg</p>
+        <hr>
+        <h3>🧠 Average Emotion Readings</h3>
+        ${Object.entries(report.average)
+          .map(([k, v]) => `<p>${k}: ${v.toFixed(2)}%</p>`).join("")}
+        <hr>
+        <h3>⏱️ Session Duration: ${report.duration}s</h3>
+      `;
+      document.getElementById("reportModal").style.display = "block";
+    }
+
+    function closeReport() {
+      document.getElementById("reportModal").style.display = "none";
+    }
+  </script>
+</body>
+</html>
